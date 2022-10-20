@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "pymacc"
 version = "0.1.0"
-description = "Python MArkdown drive fastCgi Cms"
+description = "Python MArkdown driven fastCgi Cms"
 authors = ["matheusfillipe <matheusfillipeag@gmail.com>"]
 readme = "README.md"
 
