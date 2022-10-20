@@ -13,7 +13,7 @@ This is a simple hacky script to serve a directory of markdown files over nginx'
 
 Replacing `{PUT_THEPATH_HERE} ` with wherever your cloned this repo into.
 
-Run `pip install mistune`, restart apache and take a look at `config.py`.
+Run `sudo pip3 install mistune`, restart nginx and take a look at `config.py`.
 
 
 # TODO
