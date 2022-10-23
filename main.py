@@ -34,6 +34,15 @@ HEAD = """
 			.github-fork-ribbon:before {
 				background-color: #121612;
 			}
+            pre {
+                background-color: #282c34;
+                overflow-x: auto;
+                white-space: pre-wrap;
+                white-space: -moz-pre-wrap;
+                white-space: -pre-wrap;
+                white-space: -o-pre-wrap;
+                word-wrap: break-word;
+            }
 		</style>
 """
 
@@ -63,13 +72,21 @@ def html_from_markdown(markdown, pgname):
     generated_html += "</body></html>"
     return generated_html
 
-def index():
+def index(path=None):
     """"
     Loops through all the markdown files in the www directory recursively and create hyperlinks in a list.
+    If a path is specified will list only the files in that directory or up until exists.
     """
     body = ""
-    for file in Path(ROOT_DIR).rglob("*.md"):
-        body += f'<a href="{file.relative_to(ROOT_DIR)}">{file.relative_to(ROOT_DIR)}</a><br>'
+    if path is None:
+        for file in Path(ROOT_DIR).rglob("*.md"):
+            body += f'<a href="{file.relative_to(ROOT_DIR)}">{file.relative_to(ROOT_DIR)}</a><br>'
+    else:
+        directory = Path(ROOT_DIR + path)
+        while not (directory.exists() and directory.is_dir()):
+            directory = directory.parent
+        for file in Path(directory).rglob("*.md"):
+            body += f'<a href="{file.relative_to(ROOT_DIR)}">{file.relative_to(ROOT_DIR)}</a><br>'
     return body
 
 def main():
@@ -89,8 +106,11 @@ def main():
     if path == "":
         body += index()
     else:
-        with open(ROOT_DIR + path) as f:
-            body += html_from_markdown("\n".join(f.readlines()), Path(path).stem)
+        try:
+            with open(ROOT_DIR + path) as f:
+                body += html_from_markdown("\n".join(f.readlines()), Path(path).stem)
+        except (FileNotFoundError, IsADirectoryError):
+            body += index(path)
     print(body)
 
 
