@@ -15,6 +15,10 @@ Replacing `{PUT_THEPATH_HERE} ` with wherever your cloned this repo into.
 
 Run `sudo pip3 install mistune`, restart nginx and take a look at `config.py`.
 
+## Writting
+
+The folder structure under `www` defines the routes. If an invalid path is requested, the index listing is shown for the upper valid path. Just create any markdown file and use github syntac. It also enables most of the plugins of mistune: https://mistune.lepture.com/en/latest/plugins.html
+
 
 # TODO
 

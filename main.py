@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 import mistune
 
+markdown_gen = mistune.create_markdown(plugins=['url', 'table', 'footnotes', 'strikethrough', 'task_lists', 'def_list', 'abbr'])
+
 BASE_URI = "/notes/"
 ROOT_DIR = "www/"
 
@@ -68,7 +70,7 @@ def html_from_markdown(markdown, pgname):
         + "</head><body>"
     )
 
-    generated_html += mistune.html(markdown)
+    generated_html += markdown_gen(markdown)
     generated_html += "</body></html>"
     return generated_html
 
@@ -77,16 +79,18 @@ def index(path=None):
     Loops through all the markdown files in the www directory recursively and create hyperlinks in a list.
     If a path is specified will list only the files in that directory or up until exists.
     """
-    body = ""
+    body = "<ul>"
     if path is None:
         for file in Path(ROOT_DIR).rglob("*.md"):
-            body += f'<a href="{file.relative_to(ROOT_DIR)}">{file.relative_to(ROOT_DIR)}</a><br>'
+            body += f'<li><a href="{BASE_URI}/{file.relative_to(ROOT_DIR)}">{file.relative_to(ROOT_DIR)}</a></li>'
     else:
         directory = Path(ROOT_DIR + path)
         while not (directory.exists() and directory.is_dir()):
             directory = directory.parent
         for file in Path(directory).rglob("*.md"):
-            body += f'<a href="{file.relative_to(ROOT_DIR)}">{file.relative_to(ROOT_DIR)}</a><br>'
+            body += f'<li><a href="{BASE_URI}/{file.relative_to(ROOT_DIR)}">{file.relative_to(ROOT_DIR)}</a></li>'
+
+    body += "</ul>"
     return body
 
 def main():
@@ -104,12 +108,15 @@ def main():
 
     path = request.uri.lstrip(BASE_URI)
     if path == "":
+        body += "<h2>Index</h2>"
         body += index()
     else:
         try:
             with open(ROOT_DIR + path) as f:
                 body += html_from_markdown("\n".join(f.readlines()), Path(path).stem)
         except (FileNotFoundError, IsADirectoryError):
+            body += "<h2>Path not found</h2>"
+            body += "<h3>Showing index instead</h3>"
             body += index(path)
     print(body)
 
