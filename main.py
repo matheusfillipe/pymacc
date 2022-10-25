@@ -3,19 +3,22 @@
 import os
 from dataclasses import dataclass
 from pathlib import Path
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters import html
 import mistune
-
-markdown_gen = mistune.create_markdown(plugins=['url', 'table', 'footnotes', 'strikethrough', 'task_lists', 'def_list', 'abbr'])
 
 BASE_URI = "/notes/"
 ROOT_DIR = "www/"
 
 
+formatter = html.HtmlFormatter(style="default")
 HEAD = """
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
 <meta name="color-scheme" content="light dark">
 <link rel="stylesheet" href="github-markdown.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css">
 <style>
 			body {
 				box-sizing: border-box;
@@ -31,7 +34,6 @@ HEAD = """
 				}
 			}
 		</style>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-fork-ribbon-css/0.2.3/gh-fork-ribbon.min.css">
 <style>
 			.github-fork-ribbon:before {
 				background-color: #121612;
@@ -44,9 +46,29 @@ HEAD = """
                 white-space: -pre-wrap;
                 white-space: -o-pre-wrap;
                 word-wrap: break-word;
+                margin: 10px;
+                padding: 10px;
             }
+""" 
+
+HEAD += formatter.get_style_defs()
+
+HEAD += """
 		</style>
 """
+
+
+class HighlightRenderer(mistune.HTMLRenderer):
+    def block_code(self, code, info=None):
+        if info:
+            lexer = get_lexer_by_name(info, stripall=True)
+            return highlight(code, lexer, formatter)
+        return '<pre><code>' + mistune.escape(code) + '</code></pre>'
+
+
+markdown_gen = mistune.create_markdown(
+    renderer=HighlightRenderer(),
+    plugins=['url', 'table', 'footnotes', 'strikethrough', 'task_lists', 'def_list', 'abbr'])
 
 
 @dataclass
@@ -60,11 +82,12 @@ class Request:
     user_agent: str
     script_path: str
 
+
 def html_from_markdown(markdown, pgname):
     # Initialize html and import css
     generated_html = (
         "<!DOCTYPE html>"
-        + "<html><head>" 
+        + "<html><head>"
         + "<title>{}</title>".format(pgname)
         + HEAD
         + "</head><body>"
@@ -73,6 +96,7 @@ def html_from_markdown(markdown, pgname):
     generated_html += markdown_gen(markdown)
     generated_html += "</body></html>"
     return generated_html
+
 
 def index(path=None):
     """"
@@ -92,6 +116,7 @@ def index(path=None):
 
     body += "</ul>"
     return body
+
 
 def main():
     body = "Content-Type: text/html\n\n"
@@ -113,7 +138,8 @@ def main():
     else:
         try:
             with open(ROOT_DIR + path) as f:
-                body += html_from_markdown("\n".join(f.readlines()), Path(path).stem)
+                body += html_from_markdown("\n".join(f.readlines()),
+                                           Path(path).stem)
         except (FileNotFoundError, IsADirectoryError):
             body += "<h2>Path not found</h2>"
             body += "<h3>Showing index instead</h3>"
